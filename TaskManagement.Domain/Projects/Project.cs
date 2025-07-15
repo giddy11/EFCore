@@ -5,12 +5,12 @@ namespace TaskManagement.Domain.Projects;
 public class Project
 {
     public Guid Id { get; init; }
-    public required string Title { get; set; }
+    public string Title { get; set; } = default!;
     public string? Description { get; set; }
     public Guid CreatedById { get; set; }
-    public required User CreatedBy { get; set; }
+    public User CreatedBy { get; set; } = default!;
     public DateTime StartDate { get; set; }
     public  DateTime EndDate { get; set; }
     public ProjectStatus ProjectStatus { get; set; } = ProjectStatus.Not_Started;
-    public List<Domain.Tasks.Task>? Tasks { get; set; }
+    public IList<Tasks.Task>? Tasks { get; set; } = new List<Tasks.Task>();
 }

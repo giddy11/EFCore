@@ -4,9 +4,9 @@ namespace TaskManagement.Domain.UserManagement;
 
 public class User
 {
-    //protected User() { }
+    protected User() { }
 
-    public static User New(string email, string firstName, string lastName, AccountTypes accountType, Guid? Id = null)
+    public static User New(string email, string firstName, string lastName, AccountTypes accountType = AccountTypes.User, Guid? Id = null)
     {
         return new User
         {
@@ -14,18 +14,6 @@ public class User
             FirstName = firstName,
             LastName = lastName,
             AccountType = accountType,
-            Id = Id ?? Guid.Empty
-        };
-    }
-
-    public static User New(string email, string firstName, string lastName, AccountTypes? accountType = null, Guid? Id = null)
-    {
-        return new User
-        {
-            Email = email,
-            FirstName = firstName,
-            LastName = lastName,
-            AccountType = AccountTypes.User,
             Id = Id ?? Guid.Empty
         };
     }
@@ -50,10 +38,10 @@ public class User
     }
 
     public Guid Id { get; init; }
-    public required string Email { get; set; }
+    public string Email { get; set; }
     public string? PasswordHash { get; protected set; }
-    public required string FirstName { get; set; }
-    public required string LastName { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
     public AccountTypes AccountType { get; protected set; }
     public UserStatus UserStatus { get; protected set; } = UserStatus.Active;
 }

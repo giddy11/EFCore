@@ -49,7 +49,7 @@ namespace TaskManagement.Persistence.Configurations
                    .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of user if they have created tasks
 
             // AssignedTo relationship (many-to-many)
-            builder.HasMany(t => t.AssignedTo)
+            builder.HasMany(t => t.Assignees)
                    .WithMany() // No navigation on User side
                    .UsingEntity<Dictionary<string, object>>(
                        "TaskAssignments",
@@ -95,8 +95,8 @@ namespace TaskManagement.Persistence.Configurations
             builder.HasIndex("CreatedById")
                    .HasDatabaseName("IX_Tasks_CreatedById");
 
-            builder.HasIndex("AssignedToId")
-                   .HasDatabaseName("IX_Tasks_AssignedToId");
+            //builder.HasIndex("Assignees")
+            //       .HasDatabaseName("IX_Tasks_Assignees");
 
             builder.HasIndex(t => t.TaskStatus)
                    .HasDatabaseName("IX_Tasks_TaskStatus");
