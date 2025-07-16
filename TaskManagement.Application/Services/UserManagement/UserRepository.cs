@@ -1,30 +1,34 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Application.Dtos;
-using TaskManagement.Application.Repositories.UserManagement;
 using TaskManagement.Application.Utils;
 using TaskManagement.Domain.UserManagement;
+using TaskManagement.Persistence;
 
 namespace TaskManagement.Application.Services.UserManagement;
 
-public class UserService : IUserService
+public class UserRepository : IUserRepository
 {
-    private readonly IUserRepository _repository;
+    private readonly TaskManagementDbContext _context;
     private readonly IMapper _mapper;
-    public UserService(IUserRepository repository, IMapper mapper)
+
+    public UserRepository(TaskManagementDbContext context, IMapper mapper)
     {
-        _repository = repository;
+        _context = context;
         _mapper = mapper;
     }
-    async Task<OperationResponse<CreateUserResponse>> IUserService.CreateAsync(CreateUserRequest request)
+
+    public async Task<OperationResponse<CreateUserResponse>> CreateAsync(CreateUserRequest request)
     {
-        if (await _repository.EmailExistsAsync(request.Email))
+        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
         {
             return OperationResponse<CreateUserResponse>.FailedResponse()
                 .AddError("User with this email already exists");
         }
 
         var user = User.New(request.Email, request.FirstName, request.LastName);
-        await _repository.AddAsync(user);
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
 
         var response = _mapper.Map<CreateUserResponse>(user);
         return OperationResponse<CreateUserResponse>.SuccessfulResponse(response);
@@ -32,7 +36,7 @@ public class UserService : IUserService
 
     public async Task<OperationResponse<string>> DeleteAsync(Guid id)
     {
-        var user = await _repository.GetByIdAsync(id);
+        var user = await _context.Users.FindAsync(id);
         if (user is null)
         {
             return OperationResponse<string>
@@ -40,20 +44,25 @@ public class UserService : IUserService
                 .AddError("User not found");
         }
 
-        await _repository.DeleteAsync(user);
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
         return OperationResponse<string>.SuccessfulResponse("User deleted successfully");
     }
 
-    async Task<OperationResponse<List<GetUserResponse>>> IUserService.GetAllAsync(int page, int pageSize)
+    public async Task<OperationResponse<List<GetUserResponse>>> GetAllAsync(int page, int pageSize)
     {
-        var users = await _repository.GetAllAsync((page - 1) * pageSize, pageSize);
+        var users = await _context.Users
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
         var mapped = _mapper.Map<List<GetUserResponse>>(users);
         return OperationResponse<List<GetUserResponse>>.SuccessfulResponse(mapped);
     }
 
     public async Task<OperationResponse<GetUserResponse>> GetByIdAsync(Guid id)
     {
-        var user = await _repository.GetByIdAsync(id);
+        var user = await _context.Users.FindAsync(id);
         if (user is null)
         {
             return OperationResponse<GetUserResponse>
@@ -67,7 +76,7 @@ public class UserService : IUserService
 
     public async Task<OperationResponse<GetUserResponse>> UpdateAsync(Guid id, UpdateUserRequest request)
     {
-        var user = await _repository.GetByIdAsync(id);
+        var user = await _context.Users.FindAsync(id);
         if (user is null)
         {
             return OperationResponse<GetUserResponse>
@@ -76,10 +85,10 @@ public class UserService : IUserService
         }
 
         user.Update(request.FirstName, request.LastName, request.Email);
-        await _repository.UpdateAsync(user);
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
 
         var mapped = _mapper.Map<GetUserResponse>(user);
         return OperationResponse<GetUserResponse>.SuccessfulResponse(mapped);
     }
-
 }

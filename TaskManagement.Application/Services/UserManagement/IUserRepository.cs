@@ -3,7 +3,7 @@ using TaskManagement.Application.Utils;
 
 namespace TaskManagement.Application.Services.UserManagement;
 
-public interface IUserService
+public interface IUserRepository
 {
     Task<OperationResponse<GetUserResponse>> GetByIdAsync(Guid id);
     Task<OperationResponse<CreateUserResponse>> CreateAsync(CreateUserRequest request);

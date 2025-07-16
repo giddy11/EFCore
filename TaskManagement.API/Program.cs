@@ -1,11 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json.Serialization;
 using TaskManagement.Application.Mappings;
 
 //using TaskManagement.Application.Mappings;
-using TaskManagement.Application.Repositories.UserManagement;
-using TaskManagement.Application.Services.UserManagement;
 using TaskManagement.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,8 +23,7 @@ builder.Services.AddDbContext<TaskManagementDbContext>(options => options.UseSql
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<TaskManagement.Application.Services.UserManagement.IUserRepository, TaskManagement.Application.Services.UserManagement.UserRepository>();
 
 builder.Services.AddAutoMapper(cfg =>
 {

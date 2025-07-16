@@ -49,18 +49,36 @@ namespace TaskManagement.Persistence.Configurations
                    .OnDelete(DeleteBehavior.Restrict); // Prevent deletion of user if they have created tasks
 
             // AssignedTo relationship (many-to-many)
+            //builder.HasMany(t => t.Assignees)
+            //       .WithMany(t => t.Tasks)
+            //       .UsingEntity(m =>
+            //       {
+            //           m.ToTable("TaskAssignee");
+            //           m.Property("TaskId");
+            //           m.Property("UserId");
+            //       });
+
+            //..is coming from your many-to-many configuration in the .UsingEntity(...) method. You're creating a join table (TaskAssignee) but not specifying the property types of TaskId and UserId. EF Core doesn't know what type they are (shadow properties), so you must explicitly provide the type.
+
             builder.HasMany(t => t.Assignees)
-                   .WithMany() // No navigation on User side
-                   .UsingEntity<Dictionary<string, object>>(
-                       "TaskAssignments",
-                       j => j.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade),
-                       j => j.HasOne<Domain.Tasks.Task>().WithMany().HasForeignKey("TaskId").OnDelete(DeleteBehavior.Cascade),
-                       j =>
-                       {
-                           j.ToTable("TaskAssignments", schema: PersistenceConstants.TaskManagement_SCHEMA);
-                           j.HasKey("TaskId", "UserId");
-                           j.HasIndex("UserId").HasDatabaseName("IX_TaskAssignments_UserId");
-                       });
+       .WithMany(t => t.Tasks)
+       .UsingEntity<Dictionary<string, object>>(
+           "TaskAssignee",
+           j => j.HasOne<User>()
+                 .WithMany()
+                 .HasForeignKey("UserId")
+                 .OnDelete(DeleteBehavior.Cascade),
+           j => j.HasOne<Domain.Tasks.Task>()
+                 .WithMany()
+                 .HasForeignKey("TaskId")
+                 .OnDelete(DeleteBehavior.Cascade),
+           j =>
+           {
+               j.HasKey("TaskId", "UserId");
+               j.ToTable("TaskAssignee");
+               j.Property<Guid>("TaskId");
+               j.Property<Guid>("UserId");
+           });
 
             // Project relationship (required)
             builder.HasOne(t => t.Project)
@@ -74,35 +92,34 @@ namespace TaskManagement.Persistence.Configurations
                    .HasForeignKey(c => c.TaskId)
                    .OnDelete(DeleteBehavior.Cascade); // Delete comments when task is deleted
 
-            //Labels relationship(many - to - many)
+            //builder.HasMany(t => t.Labels)
+            //       .WithMany(t => t.Tasks)
+            //       .UsingEntity(m =>
+            //       {
+            //           m.ToTable("TaskLabels");
+            //           m.Property("TaskId");
+            //           m.Property("LabelId");
+            //       });
+
             builder.HasMany(t => t.Labels)
-                   .WithMany() // No navigation on Label side
-                   .UsingEntity<Dictionary<string, object>>(
-                       "TaskLabels",
-                       j => j.HasOne<Label>().WithMany().HasForeignKey("LabelId").OnDelete(DeleteBehavior.Cascade),
-                       j => j.HasOne<Domain.Tasks.Task>().WithMany().HasForeignKey("TaskId").OnDelete(DeleteBehavior.Cascade),
-                       j =>
-                       {
-                           j.ToTable("TaskLabels", schema: PersistenceConstants.TaskManagement_SCHEMA);
-                           j.HasKey("TaskId", "LabelId");
-                           j.HasIndex("LabelId").HasDatabaseName("IX_TaskLabels_LabelId");
-                       });
-
-            // Indexes for better query performance
-            builder.HasIndex(t => t.ProjectId)
-                   .HasDatabaseName("IX_Tasks_ProjectId");
-
-            builder.HasIndex("CreatedById")
-                   .HasDatabaseName("IX_Tasks_CreatedById");
-
-            //builder.HasIndex("Assignees")
-            //       .HasDatabaseName("IX_Tasks_Assignees");
-
-            builder.HasIndex(t => t.TaskStatus)
-                   .HasDatabaseName("IX_Tasks_TaskStatus");
-
-            builder.HasIndex(t => t.PriorityStatus)
-                   .HasDatabaseName("IX_Tasks_PriorityStatus");
+       .WithMany(t => t.Tasks)
+       .UsingEntity<Dictionary<string, object>>(
+           "TaskLabels",
+           j => j.HasOne<Label>()
+                 .WithMany()
+                 .HasForeignKey("LabelId")
+                 .OnDelete(DeleteBehavior.Cascade),
+           j => j.HasOne<Domain.Tasks.Task>()
+                 .WithMany()
+                 .HasForeignKey("TaskId")
+                 .OnDelete(DeleteBehavior.Cascade),
+           j =>
+           {
+               j.HasKey("TaskId", "LabelId");
+               j.ToTable("TaskLabels");
+               j.Property<Guid>("TaskId");
+               j.Property<Guid>("LabelId");
+           });
         }
     }
 }

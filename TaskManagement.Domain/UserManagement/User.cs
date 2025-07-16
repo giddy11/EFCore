@@ -42,6 +42,7 @@ public class User
     public string? PasswordHash { get; protected set; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
+    public IList<Domain.Tasks.Task> Tasks { get; set; } = new List<Domain.Tasks.Task>();
     public AccountTypes AccountType { get; protected set; }
     public UserStatus UserStatus { get; protected set; } = UserStatus.Active;
 }
